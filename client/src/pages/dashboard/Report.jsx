@@ -77,7 +77,7 @@ export default function Report() {
                 </GridItems>
 
                 <GridItems title="Income Sources">
-                    <div className="w-75 h-75 mx-auto">
+                    <div className="w-[250px] h-[250px] sm:w-[300px] sm:h-[300px] mx-auto">
                         <Doughnut
                             data={{
                                 labels: Object.keys(incomeData),
@@ -155,7 +155,7 @@ export default function Report() {
 function GridItems({ title, className = "", children }) {
     return (
         <div
-            className={`flex flex-col items-center justify-center p-4 border border-white/10 rounded-lg bg-[#16161d] min-h-105 ${className}`}
+            className={`flex flex-col items-center p-4 border border-white/10 rounded-lg bg-[#16161d] min-h-[420px] overflow-hidden ${className}`}
         >
             <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
 
