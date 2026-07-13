@@ -9,7 +9,7 @@ import {
     Legend,
 } from "recharts";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTransaction } from "../context/TransactionContext";
 import { useIncome } from "../context/INcomeContext";
 
@@ -32,6 +32,24 @@ export default function AreaChartComponent() {
     const { transactions = [] } = useTransaction();
     const { incomes = [] } = useIncome();
 
+    const currentYear = new Date().getFullYear();
+    const [selectedYear, setSelectedYear] = useState(currentYear);
+
+    // Get all available years
+    const availableYears = useMemo(() => {
+        const years = new Set();
+
+        incomes.forEach((income) => {
+            years.add(new Date(income.date).getFullYear());
+        });
+
+        transactions.forEach((expense) => {
+            years.add(new Date(expense.date).getFullYear());
+        });
+
+        return [...years].sort((a, b) => b - a);
+    }, [transactions, incomes]);
+
     const chartData = useMemo(() => {
         const data = months.map((month) => ({
             name: month,
@@ -41,53 +59,87 @@ export default function AreaChartComponent() {
 
         // Add incomes
         incomes.forEach((income) => {
-            const monthIndex = new Date(income.date).getMonth();
-            data[monthIndex].income += Number(income.amount);
+            const date = new Date(income.date);
+
+            if (date.getFullYear() !== selectedYear) return;
+
+            data[date.getMonth()].income += Number(income.amount);
         });
 
         // Add expenses
         transactions.forEach((expense) => {
-            const monthIndex = new Date(expense.date).getMonth();
-            data[monthIndex].expenses += Number(expense.amount);
+            const date = new Date(expense.date);
+
+            if (date.getFullYear() !== selectedYear) return;
+
+            data[date.getMonth()].expenses += Number(expense.amount);
         });
 
         return data;
-    }, [transactions, incomes]);
+    }, [transactions, incomes, selectedYear]);
 
     return (
-        <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#3b3b3b" />
+        <div className="w-full h-full">
+            <div className="flex justify-end mb-4">
+                <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    className="bg-[#16161d] border border-gray-600 rounded-md px-3 py-2 text-white"
+                >
+                    {availableYears.map((year) => (
+                        <option key={year} value={year}>
+                            {year}
+                        </option>
+                    ))}
+                </select>
+            </div>
 
-                <XAxis dataKey="name" tick={{ fill: "white" }} stroke="white" />
+            <ResponsiveContainer width="100%" height={350}>
+                <AreaChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3b3b3b" />
 
-                <YAxis tick={{ fill: "white" }} stroke="white" />
+                    <XAxis
+                        dataKey="name"
+                        tick={{ fill: "white" }}
+                        stroke="white"
+                    />
 
-                <Tooltip content={<CustomTooltip />} />
+                    <YAxis
+                        tickFormatter={(value) =>
+                            `Rs. ${value.toLocaleString("en-IN")}`
+                        }
+                        tick={{ fill: "white" }}
+                        stroke="white"
+                    />
 
-                <Legend
-                    wrapperStyle={{
-                        color: "white",
-                    }}
-                />
+                    <Tooltip content={<CustomTooltip />} />
 
-                <Area
-                    type="monotone"
-                    dataKey="expenses"
-                    stroke="#f21707"
-                    fill="#f21707"
-                    fillOpacity={0.4}
-                />
+                    <Legend
+                        wrapperStyle={{
+                            color: "white",
+                        }}
+                    />
 
-                <Area
-                    type="monotone"
-                    dataKey="income"
-                    stroke="#22c55e"
-                    fill="#22c55e"
-                    fillOpacity={0.4}
-                />
-            </AreaChart>
-        </ResponsiveContainer>
+                    <Area
+                        type="monotone"
+                        dataKey="expenses"
+                        stroke="#ef4444"
+                        fill="#ef4444"
+                        fillOpacity={0.35}
+                        animationDuration={1200}
+                    />
+
+                    <Area
+                        type="monotone"
+                        dataKey="income"
+                        stroke="#22c55e"
+                        fill="#22c55e"
+                        fillOpacity={0.35}
+                        animationDuration={1200}
+                    />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
     );
 }
 
@@ -101,14 +153,20 @@ function CustomTooltip({ active, payload, label }) {
             <p className="text-green-400">
                 Income:
                 <span className="ml-2">
-                    Rs.{payload.find((p) => p.dataKey === "income")?.value?.toLocaleString("en-IN") ?? 0}
+                    Rs.
+                    {payload
+                        .find((p) => p.dataKey === "income")
+                        ?.value?.toLocaleString("en-IN") ?? 0}
                 </span>
             </p>
 
             <p className="text-red-400">
                 Expenses:
                 <span className="ml-2">
-                    Rs.{payload.find((p) => p.dataKey === "expenses")?.value?.toLocaleString("en-IN") ?? 0}
+                    Rs.
+                    {payload
+                        .find((p) => p.dataKey === "expenses")
+                        ?.value?.toLocaleString("en-IN") ?? 0}
                 </span>
             </p>
         </div>
