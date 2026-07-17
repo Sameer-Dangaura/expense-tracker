@@ -28,12 +28,10 @@ const months = [
     "Dec",
 ];
 
-export default function AreaChartComponent() {
+export default function AreaChartComponent({ selectedYear }) {
     const { transactions = [] } = useTransaction();
     const { incomes = [] } = useIncome();
 
-    const currentYear = new Date().getFullYear();
-    const [selectedYear, setSelectedYear] = useState(currentYear);
 
     // Get all available years
     const availableYears = useMemo(() => {
@@ -80,19 +78,6 @@ export default function AreaChartComponent() {
 
     return (
         <div className="w-full h-full">
-            <div className="flex justify-end mb-4">
-                <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                    className="bg-[#16161d] border border-gray-600 rounded-md px-3 py-2 text-white"
-                >
-                    {availableYears.map((year) => (
-                        <option key={year} value={year}>
-                            {year}
-                        </option>
-                    ))}
-                </select>
-            </div>
 
             <ResponsiveContainer width="100%" height={350}>
                 <AreaChart data={chartData}>
